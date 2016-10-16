@@ -1,0 +1,19 @@
+#!/usr/bin/env okshell
+
+var loc = location();
+
+var prices = query("https://api.uber.com/v1/estimates/price?start_latitude=${loc.latitude}&start_longitude=${loc.longitude}&end_latitude=51.4624638&end_longitude=0.00328752");
+var times = query("https://api.uber.com/v1/estimates/time?start_latitude=${loc.latitude}&start_longitude=${loc.longitude}&end_latitude=51.4624638&end_longitude=0.00328752");
+
+prices.prices.forEach(function(estimate) {
+  var eta = "N/A";
+
+  times.times.forEach(function(estimated_time) {
+    if (estimated_time.product_id === estimate.product_id) {
+      eta = (estimated_time.estimate / 60) + " min";
+    }
+  });
+
+  print(estimate.localized_display_name + "\t" + "(" + estimate.surge_multiplier + "x)\t" + estimate.estimate + "\t" + eta);
+});
+
