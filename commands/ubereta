@@ -2,8 +2,25 @@
 
 var loc = location();
 
-var prices = query("https://api.uber.com/v1/estimates/price?start_latitude=${loc.latitude}&start_longitude=${loc.longitude}&end_latitude=51.4624638&end_longitude=0.00328752");
-var times = query("https://api.uber.com/v1/estimates/time?start_latitude=${loc.latitude}&start_longitude=${loc.longitude}&end_latitude=51.4624638&end_longitude=0.00328752");
+String.prototype.padRight = function(l,c) {return this+Array(l-this.length+1).join(c||" ")}
+
+function staticMap(start, dest) {
+  var markers = [];
+  markers.push("pin-m-marker+CCC(" + start.longitude + "," + start.latitude + ")");
+  markers.push("pin-m-marker+CCC(" + dest.longitude + "," + dest.latitude + ")");
+
+  return "https://api.mapbox.com/v4/mapbox.dark/" + markers.join(",") + "/auto/300x300.png";
+};
+
+var dest = {
+  "latitude": 51.501364,
+  "longitude": -0.144084
+};
+
+show(staticMap(loc, dest));
+
+var prices = query("https://api.uber.com/v1/estimates/price?start_latitude=${loc.latitude}&start_longitude=${loc.longitude}&end_latitude=${dest.latitude}&end_longitude=${dest.longitude}");
+var times = query("https://api.uber.com/v1/estimates/time?start_latitude=${loc.latitude}&start_longitude=${loc.longitude}&end_latitude=${dest.latitude}&end_longitude=${dest.longitude}");
 
 prices.prices.forEach(function(estimate) {
   var eta = "N/A";
@@ -14,6 +31,6 @@ prices.prices.forEach(function(estimate) {
     }
   });
 
-  print(estimate.localized_display_name + "\t" + "(" + estimate.surge_multiplier + "x)\t" + estimate.estimate + "\t" + eta);
+  print(estimate.localized_display_name.padRight(15) + "\t" + "(" + estimate.surge_multiplier + "x)\t" + estimate.estimate + "\t" + eta);
 });
 
