@@ -1,5 +1,7 @@
 #!/usr/bin/env okshell
 
+warmup(["https://api.mapbox.com/robots.txt", "https://api.uber.com/robots.txt"]);
+
 var loc = location();
 
 // http://fiddle.jshell.net/4mHW9/52/light/
@@ -30,8 +32,8 @@ var route = query("https://api.mapbox.com/directions/v5/mapbox/driving/${loc.lon
 
 show(staticMap(loc, dest, route.routes[0].geometry));
 
-var prices = query("https://api.uber.com/v1/estimates/price?start_latitude=${loc.latitude}&start_longitude=${loc.longitude}&end_latitude=${dest.latitude}&end_longitude=${dest.longitude}");
-var times = query("https://api.uber.com/v1/estimates/time?start_latitude=${loc.latitude}&start_longitude=${loc.longitude}&end_latitude=${dest.latitude}&end_longitude=${dest.longitude}");
+var prices = query("https://api.uber.com/v1.2/estimates/price?start_latitude=${loc.latitude}&start_longitude=${loc.longitude}&end_latitude=${dest.latitude}&end_longitude=${dest.longitude}");
+var times = query("https://api.uber.com/v1.2/estimates/time?start_latitude=${loc.latitude}&start_longitude=${loc.longitude}&end_latitude=${dest.latitude}&end_longitude=${dest.longitude}");
 
 prices.prices.forEach(function(estimate) {
   var eta = "N/A";
@@ -42,6 +44,6 @@ prices.prices.forEach(function(estimate) {
     }
   });
 
-  print(estimate.localized_display_name.padRight(15) + "\t" + "(" + estimate.surge_multiplier + "x)\t" + estimate.estimate + "\t" + eta);
+  print(estimate.localized_display_name.padRight(15) + "\t" + eta + "\t" + estimate.estimate);
 });
 
