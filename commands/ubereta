@@ -21,7 +21,9 @@ function staticMap(start, dest, route) {
 
 var possibleDestinations = query("https://api.mapbox.com/geocoding/v5/mapbox.places/${arguments.join('+')}.json?proximity=${loc.longitude},${loc.latitude}");
 
-destination = possibleDestinations.features[0].center;
+var firstDestination = possibleDestinations.features[0];
+print(firstDestination.text)
+var destination = firstDestination.center;
 
 var dest = {
   "latitude": destination[1],
@@ -30,20 +32,34 @@ var dest = {
 
 var route = query("https://api.mapbox.com/directions/v5/mapbox/driving/${loc.longitude},${loc.latitude};${dest.longitude},${dest.latitude}?overview=full&geometries=polyline");
 
+// TODO handle errors
 show(staticMap(loc, dest, route.routes[0].geometry));
 
-var prices = query("https://api.uber.com/v1.2/estimates/price?start_latitude=${loc.latitude}&start_longitude=${loc.longitude}&end_latitude=${dest.latitude}&end_longitude=${dest.longitude}");
-var times = query("https://api.uber.com/v1.2/estimates/time?start_latitude=${loc.latitude}&start_longitude=${loc.longitude}&end_latitude=${dest.latitude}&end_longitude=${dest.longitude}");
+try {
+  var prices = query("https://api.uber.com/v1.2/estimates/price?start_latitude=${loc.latitude}&start_longitude=${loc.longitude}&end_latitude=${dest.latitude}&end_longitude=${dest.longitude}");
+  var times = query("https://api.uber.com/v1.2/estimates/time?start_latitude=${loc.latitude}&start_longitude=${loc.longitude}&end_latitude=${dest.latitude}&end_longitude=${dest.longitude}");
 
-prices.prices.forEach(function(estimate) {
-  var eta = "N/A";
+  prices.prices.forEach(function(estimate) {
+    var eta = "N/A";
 
-  times.times.forEach(function(estimated_time) {
-    if (estimated_time.product_id === estimate.product_id) {
-      eta = (estimated_time.estimate / 60) + " min";
-    }
+    times.times.forEach(function(estimated_time) {
+      if (estimated_time.product_id === estimate.product_id) {
+        eta = (estimated_time.estimate / 60) + " min";
+      }
+    });
+
+    print(estimate.localized_display_name.padRight(15) + "\t" + eta + "\t" + estimate.estimate);
   });
+} catch (e if e.message) {
+  try {
+    var errorBlock = JSON.parse(e.message);
+    if (errorBlock.message) {
+      usage(errorBlock.message);
+    }
+    throw e;
+  } catch (pe if pe instanceof SyntaxError) {
+    throw e;
+  }
+}
 
-  print(estimate.localized_display_name.padRight(15) + "\t" + eta + "\t" + estimate.estimate);
-});
 
