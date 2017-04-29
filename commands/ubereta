@@ -1,12 +1,15 @@
 #!/usr/bin/env okshell
 
+# warmup both apis concurrently
 warmup(["https://api.mapbox.com/robots.txt", "https://api.uber.com/robots.txt"]);
 
+# get location from CoreLocationCLI
 var loc = location();
 
 // http://fiddle.jshell.net/4mHW9/52/light/
 String.prototype.padRight = function(l,c) {return this+Array(l-this.length+1).join(c||" ")}
 
+# get url for a drive from start to dest along route
 function staticMap(start, dest, route) {
   var markers = [];
   markers.push("pin-m-marker+CCC(" + start.longitude + "," + start.latitude + ")");
@@ -19,6 +22,7 @@ function staticMap(start, dest, route) {
   return "https://api.mapbox.com/v4/mapbox.dark/" + markers.join(",") + "/auto/300x300.png";
 };
 
+# query mapbox for places matching the name
 var possibleDestinations = query("https://api.mapbox.com/geocoding/v5/mapbox.places/${arguments.join('+')}.json?proximity=${loc.longitude},${loc.latitude}");
 
 var firstDestination = possibleDestinations.features[0];
@@ -30,12 +34,14 @@ var dest = {
   "longitude": destination[0]
 };
 
+# get a driving route
 var route = query("https://api.mapbox.com/directions/v5/mapbox/driving/${loc.longitude},${loc.latitude};${dest.longitude},${dest.latitude}?overview=full&geometries=polyline");
 
 // TODO handle errors
 show(staticMap(loc, dest, route.routes[0].geometry));
 
 try {
+  # get prices
   var prices = query("https://api.uber.com/v1.2/estimates/price?start_latitude=${loc.latitude}&start_longitude=${loc.longitude}&end_latitude=${dest.latitude}&end_longitude=${dest.longitude}");
   var times = query("https://api.uber.com/v1.2/estimates/time?start_latitude=${loc.latitude}&start_longitude=${loc.longitude}&end_latitude=${dest.latitude}&end_longitude=${dest.longitude}");
 
